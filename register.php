@@ -30,7 +30,7 @@ if (isset($_POST["submit"])) {
             die("Prepared statement failed: " . mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, "ssssss", $first_name, $surname, $username, $email, $phone_number, $hashedPassword);
+        mysqli_stmt_bind_param($stmt, "ssssss", $first_name, $surname, $username, $email, $phone_number, $password);
 
         if (mysqli_stmt_execute($stmt)) {
             echo "Registration successful! You can now log in.";

@@ -3,7 +3,7 @@ $HOSTNAME = 'localhost';
 $USERNAME = 'root';
 $PASSWORD = '';
 $DATABASE = 'online_store';
-
+session_start();
 $conn = mysqli_connect($HOSTNAME, $USERNAME, $PASSWORD, $DATABASE);
 
 if (!$conn) {
@@ -42,17 +42,17 @@ if (!$conn) {
 //         $_SESSION['username'] = $user['username'];
 //         $_SESSION['first_name'] = $user['first_name'];
 if (isset($_POST["submit"])) {
-    $email = htmlspecialchars($_POST['email']);
+    $username = htmlspecialchars($_POST['username']);
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM buyer WHERE email = ?";
+    $query = "SELECT * FROM buyer WHERE username = ?";
     $stmt = mysqli_prepare($conn, $query);
 
     if (!$stmt) {
         die("Prepared statement failed: " . mysqli_error($conn));
     }
 
-    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_bind_param($stmt, "s", $username);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
@@ -133,7 +133,7 @@ mysqli_close($conn);
         <h2>Buyer Login</h2>
         <form action="" method="post" autocomplete="off">
             <label for="username">Username:</label>
-            <input type="text" name="email" id="email" placeholder="Enter username or email" required>
+            <input type="text" name="username" id="username" placeholder="Enter username " required>
             <label for="password">Password:</label>
             <input type="password" name="password" id="password" placeholder="Enter password" required>
             <button type="submit" name="submit">Login</button>
