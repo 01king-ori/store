@@ -45,7 +45,7 @@ if (!$result) {
     </style>
 </head>
 <body>
-    <h2>heyy</h2>
+    
     <h1>Products</h1>
 
     <?php while ($row = mysqli_fetch_assoc($result)) : ?>
