@@ -42,25 +42,25 @@ if (!$conn) {
 //         $_SESSION['username'] = $user['username'];
 //         $_SESSION['first_name'] = $user['first_name'];
 if (isset($_POST["submit"])) {
-    $username = htmlspecialchars($_POST['username']);
+    $email = htmlspecialchars($_POST['email']);
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM buyer WHERE username = ?";
+    $query = "SELECT * FROM buyer WHERE email = ?";
     $stmt = mysqli_prepare($conn, $query);
 
     if (!$stmt) {
         die("Prepared statement failed: " . mysqli_error($conn));
     }
 
-    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_bind_param($stmt, "s", $email);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
     if ($row = mysqli_fetch_assoc($result)) {
         if ($password === $row['password']) {
             $_SESSION['user_id'] = $row['id'];
-            $_SESSION['username'] = $row['username'];
-            echo "Login successful! Welcome, " . $row['username'] . "!";
+            $_SESSION['email'] = $row['email'];
+            echo "Login successful! Welcome, " . $row['email'] . "!";
     
         header("Location: browse_products.php");
         exit();
@@ -132,8 +132,8 @@ mysqli_close($conn);
     <div class="container">
         <h2>Buyer Login</h2>
         <form action="" method="post" autocomplete="off">
-            <label for="username">Username:</label>
-            <input type="text" name="username" id="username" placeholder="Enter username " required>
+            <label for="username">Email:</label>
+            <input type="text" name="email" id="email" placeholder="Enter email " required>
             <label for="password">Password:</label>
             <input type="password" name="password" id="password" placeholder="Enter password" required>
             <button type="submit" name="submit">Login</button>
