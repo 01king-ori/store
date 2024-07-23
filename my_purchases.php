@@ -1,6 +1,15 @@
 <?php
 session_start();
-require_once 'config.php';
+$HOSTNAME = 'localhost';
+$USERNAME = 'root';
+$PASSWORD = '';
+$DATABASE = 'online_store';
+
+$conn = mysqli_connect($HOSTNAME, $USERNAME, $PASSWORD, $DATABASE);
+
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
 require_once 'functions.php';
 
 // Ensure user is logged in
@@ -35,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $_SESSION['message'] = "Funds have been released to the seller.";
     } elseif (isset($_POST['refund_request'])) {
-        // Update transaction status to 'refund_requested'
+        /
         $update_query = "UPDATE transactions SET status = 'refund_requested' WHERE id = ?";
         $update_stmt = $conn->prepare($update_query);
         $update_stmt->bind_param("i", $transaction_id);
@@ -44,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['message'] = "Refund requested. Your money will be refunded within two days.";
     }
     
-    // Redirect to refresh the page and avoid form resubmission
+   
     header('Location: my_purchases.php');
     exit();
 }

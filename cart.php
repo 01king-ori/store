@@ -1,9 +1,9 @@
 <?php
 session_start();
-echo "Cart page - Session ID: " . session_id() . "<br>";
-echo "<pre>Cart page - Session variables: ";
-print_r($_SESSION);
-echo "</pre>";
+// echo "Cart page - Session ID: " . session_id() . "<br>";
+// echo "<pre>Cart page - Session variables: ";
+// print_r($_SESSION);
+// echo "</pre>";
 $HOSTNAME = 'localhost';
 $USERNAME = 'root';
 $PASSWORD = '';
@@ -49,15 +49,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $phoneNumber = $_POST['phone'];
         
         // Fetch seller information from the product
-        $query = "SELECT seller_id FROM products WHERE id = ?";
+        $query = "SELECT seller_id,price FROM products WHERE id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, "i", $product_id);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $product = mysqli_fetch_assoc($result);
         $seller_id = $product['seller_id'];
+        $price = $product['price'];
         
         $buyer_id = $_SESSION['user_id']; 
+        $buyer_query = "SELECT email FROM buyer  WHERE id = ?";
+        $buyer_stmt = mysqli_prepare($conn, $buyer_query);
+        mysqli_stmt_bind_param($buyer_stmt, "i", $buyer_id);
+        mysqli_stmt_execute($buyer_stmt);
+        $buyer_result = mysqli_stmt_get_result($buyer_stmt);
+        $buyer = mysqli_fetch_assoc($buyer_result);
+        $buyer_email = $buyer['email'];
+        
+        $quantity = $_SESSION['cart'][$product_id];
+        $total_price = $price * $quantity;
+        // Insert order into orders table
+        $order_query = "INSERT INTO orders (buyer_email, seller_id, product_id, price, quantity) VALUES (?, ?, ?, ?, ?)";
+        $order_stmt = mysqli_prepare($conn, $order_query);
+        mysqli_stmt_bind_param($order_stmt, "siidd", $buyer_email, $seller_id, $product_id, $total_price, $quantity);
+        mysqli_stmt_execute($order_stmt);
         
         $transaction = createTransaction($buyer_id, $seller_id,$product_id, $amount);
         
