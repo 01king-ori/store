@@ -20,6 +20,8 @@ $status_queries = [
     'refund_requested' => "SELECT COUNT(*) as count FROM transactions WHERE seller_id = ? AND status = 'refund_requested'"
 ];
 
+
+
 $counts = [];
 
 foreach ($status_queries as $status => $query) {
@@ -30,6 +32,19 @@ foreach ($status_queries as $status => $query) {
     $counts[$status] = mysqli_fetch_assoc($result)['count'];
     mysqli_stmt_close($stmt);
 }
+
+
+$messages_query = "SELECT COUNT(*) as message_count FROM messages WHERE  receiver_email = ?";
+$messages_stmt = mysqli_prepare($conn, $messages_query);
+if ($messages_stmt === false) {
+    die("Error preparing messages statement: " . mysqli_error($conn));
+}
+mysqli_stmt_bind_param($messages_stmt, "s", $seller_email);
+mysqli_stmt_execute($messages_stmt);
+$message_result = mysqli_stmt_get_result($messages_stmt);
+$message_count = mysqli_fetch_assoc($message_result)['message_count'];
+mysqli_stmt_close($messages_stmt);
+
 //for products count
 $product_query = "SELECT COUNT(*) as product_count FROM products WHERE seller_id = ?";
 $product_stmt = mysqli_prepare($conn, $product_query);
@@ -167,8 +182,12 @@ mysqli_stmt_close($product_stmt);
         <div class="sidebar">
         <ul>
     <li><a href="#" class="link active">My TUK Trade Circle</a></li>
-    <li><a href="messages.html">My Messages</a></li>
-
+    <li><a href="messages.html">My Messages
+    <?php if ($message_count > 0): ?>
+            <span class="message-count">(<?php echo $message_count; ?>)</span>
+        <?php endif; ?>
+    </a></li>
+    
     <li><a href="ratings.html">Random Trade</a></li>
     <li><a href="purchases.html">Stuff I got</a></li>
 
@@ -238,5 +257,7 @@ mysqli_stmt_close($product_stmt);
             </div>
         </div>
     </div>
+    
+
 </body>
 </html>
