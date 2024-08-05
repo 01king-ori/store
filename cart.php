@@ -220,10 +220,11 @@ if (!empty($_SESSION['cart'])) {
                     <td>$<?php echo number_format($item['price'], 2); ?></td>
                     <td><?php echo $item['quantity']; ?></td>
                     <td>$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
-                    
+                    <tr data-product-id="<?php echo $item['id']; ?>">
                     <td>
                         <form action="cart.php" method="post">
-                            <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+                           
+                        <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <input type="hidden" name="action" value="remove">
                             <button type="submit">Remove</button>
                         </form>
@@ -233,7 +234,7 @@ if (!empty($_SESSION['cart'])) {
                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <input type="hidden" name="amount" value="<?php echo $item['price'] * $item['quantity']; ?>">
                             <input type="text" name="phone" placeholder="Phone number" required>
-                            <button type="submit" name="pay">Pay</button>
+                            <button type="button" onclick="handlePayment(<?php echo $item['id']; ?>)">Pay</button>
                         </form>
                     </td>
                 </tr>
@@ -251,3 +252,41 @@ if (!empty($_SESSION['cart'])) {
 <?php
 mysqli_close($conn);
 ?>
+<script>
+function handlePayment(productId) {
+    // Submit the payment form
+    document.querySelector(`form[data-product-id="${productId}"]`).submit();
+
+    // Set a timeout to remove the item after 2 minutes
+    setTimeout(() => {
+        fetch('remove_from_cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `product_id=${productId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the item from the DOM
+                document.querySelector(`tr[data-product-id="${productId}"]`).remove();
+                // Update the total
+                updateTotal();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }, 120000); // 120000 milliseconds = 2 minutes
+}
+
+function updateTotal() {
+    // Recalculate the total
+    let total = 0;
+    document.querySelectorAll('tr[data-product-id]').forEach(row => {
+        const price = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('$', ''));
+        const quantity = parseInt(row.querySelector('td:nth-child(3)').textContent);
+        total += price * quantity;
+    });
+    document.querySelector('.total').textContent = `Total: $${total.toFixed(2)}`;
+}
+</script>

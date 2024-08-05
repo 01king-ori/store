@@ -182,7 +182,7 @@ mysqli_stmt_close($product_stmt);
         <div class="sidebar">
         <ul>
     <li><a href="#" class="link active">My TUK Trade Circle</a></li>
-    <li><a href="messages.html">My Messages
+    <li><a href="messages.php">My Messages
     <?php if ($message_count > 0): ?>
             <span class="message-count">(<?php echo $message_count; ?>)</span>
         <?php endif; ?>
