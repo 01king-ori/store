@@ -16,12 +16,12 @@ if (!$conn) {
 }
 
 
-// Initialize cart if not exists
+
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = array();
 }
 
-// Handle actions
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['product_id'])) {
         $product_id = $_POST['product_id'];
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $partyB = '174379';
         $phoneNumber = $_POST['phone'];
         
-        // Fetch seller information from the product
+        
         $query = "SELECT seller_id,price FROM products WHERE id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, "i", $product_id);
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $quantity = $_SESSION['cart'][$product_id];
         $total_price = $price * $quantity;
-        // Insert order into orders table
+       
         $order_query = "INSERT INTO orders (buyer_email, seller_id, product_id, price, quantity) VALUES (?, ?, ?, ?, ?)";
         $order_stmt = mysqli_prepare($conn, $order_query);
         mysqli_stmt_bind_param($order_stmt, "siidd", $buyer_email, $seller_id, $product_id, $total_price, $quantity);
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
 
-// Fetch cart items
+
 $cart_items = array();
 if (!empty($_SESSION['cart'])) {
     $product_ids = implode(',', array_keys($_SESSION['cart']));
@@ -123,7 +123,7 @@ if (!empty($_SESSION['cart'])) {
 //         $_SESSION['success_message'] = "Payment initiated successfully. Please check your phone to complete the transaction.";
 //     }
 // }
-
+$_SESSION['paid_items'][$product_id] = time(); 
 ?>
 
 <!DOCTYPE html>
@@ -220,11 +220,10 @@ if (!empty($_SESSION['cart'])) {
                     <td>$<?php echo number_format($item['price'], 2); ?></td>
                     <td><?php echo $item['quantity']; ?></td>
                     <td>$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
-                    <tr data-product-id="<?php echo $item['id']; ?>">
+                    
                     <td>
                         <form action="cart.php" method="post">
-                           
-                        <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+                            <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <input type="hidden" name="action" value="remove">
                             <button type="submit">Remove</button>
                         </form>
@@ -234,7 +233,7 @@ if (!empty($_SESSION['cart'])) {
                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <input type="hidden" name="amount" value="<?php echo $item['price'] * $item['quantity']; ?>">
                             <input type="text" name="phone" placeholder="Phone number" required>
-                            <button type="button" onclick="handlePayment(<?php echo $item['id']; ?>)">Pay</button>
+                            <button type="submit" name="pay">Pay</button>
                         </form>
                     </td>
                 </tr>
@@ -248,45 +247,30 @@ if (!empty($_SESSION['cart'])) {
     
     <p><a href="browse_products.php" class="continue-shopping">Continue Shopping</a></p>
 </body>
+<script>
+function removeFromCart(productId) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "remove_from_cart.php", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            location.reload(); 
+        }
+    }
+    xhr.send("product_id=" + productId);
+}
+
+
+setInterval(function() {
+    <?php foreach ($_SESSION['paid_items'] as $product_id => $timestamp): ?>
+        if ((Date.now() / 1000) - <?php echo $timestamp; ?> >= 60) { 
+            removeFromCart(<?php echo $product_id; ?>);
+            <?php unset($_SESSION['paid_items'][$product_id]); ?>
+        }
+    <?php endforeach; ?>
+}, 5000);
+</script>
 </html>
 <?php
 mysqli_close($conn);
 ?>
-<script>
-function handlePayment(productId) {
-    // Submit the payment form
-    document.querySelector(`form[data-product-id="${productId}"]`).submit();
-
-    // Set a timeout to remove the item after 2 minutes
-    setTimeout(() => {
-        fetch('remove_from_cart.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `product_id=${productId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the item from the DOM
-                document.querySelector(`tr[data-product-id="${productId}"]`).remove();
-                // Update the total
-                updateTotal();
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }, 120000); // 120000 milliseconds = 2 minutes
-}
-
-function updateTotal() {
-    // Recalculate the total
-    let total = 0;
-    document.querySelectorAll('tr[data-product-id]').forEach(row => {
-        const price = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('$', ''));
-        const quantity = parseInt(row.querySelector('td:nth-child(3)').textContent);
-        total += price * quantity;
-    });
-    document.querySelector('.total').textContent = `Total: $${total.toFixed(2)}`;
-}
-</script>
