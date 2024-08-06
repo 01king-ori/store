@@ -20,11 +20,14 @@ if (!$conn) {
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = array();
 }
+if (!isset($_SESSION['paid_items'])) {
+    $_SESSION['paid_items'] = array();
+}
 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['product_id'])) {
-        $product_id = $_POST['product_id'];
+        $product_id  = $_POST['product_id'];
         $action = $_POST['action'];
 
         if ($action == 'add') {
